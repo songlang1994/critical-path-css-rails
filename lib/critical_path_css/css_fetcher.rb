@@ -10,9 +10,10 @@ module CriticalPathCss
     end
 
     def fetch
-      routes = @config.routes.map { |route| [route, css_for_route(route)] }.to_h
-      action_routes = @config.action_routes.map { |action, path| [action, css_for_route(path)] }.to_h
-      routes.merge action_routes
+      routes, action_routes, result = @config.routes, @config.action_routes, {}
+      result.merge! routes.map { |route| [route, css_for_route(route)] }.to_h if routes
+      result.merge! action_routes.map { |action, route| [action, css_for_route(route)] }.to_h if action_routes
+      result
     end
 
     def fetch_route(path_or_action)
