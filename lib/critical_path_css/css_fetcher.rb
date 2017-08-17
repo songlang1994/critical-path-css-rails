@@ -10,10 +10,13 @@ module CriticalPathCss
     end
 
     def fetch
-      @config.routes.map { |route| [route, css_for_route(route)] }.to_h
+      routes = @config.routes.map { |route| [route, css_for_route(route)] }.to_h
+      action_routes = @config.action_routes.map { |action, path| [action, css_for_route(path)] }.to_h
+      routes.merge action_routes
     end
 
-    def fetch_route(route)
+    def fetch_route(path_or_action)
+      route = action_string?(path_or_action) ? @config.action_routes[path_or_action] : path_or_action
       css_for_route route
     end
 
@@ -64,6 +67,10 @@ module CriticalPathCss
               "  with options=#{options.inspect}"
       end
       out
+    end
+
+    def action_string?(str)
+      str.include?('#')
     end
   end
 end
