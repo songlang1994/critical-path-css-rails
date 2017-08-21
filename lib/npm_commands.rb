@@ -3,14 +3,15 @@
 # NPM wrapper with helpful error messages
 class NpmCommands
   class << self
-    @@npm, @@node = 'npm', 'node'
-
     # @return [Boolean] whether the installation succeeded
     def install
       install_nodejs unless nodejs_installed?
+    end
+
+    def run_npm_install
       STDOUT.puts 'Installing npm dependencies...'
-      install_status = Dir.chdir File.expand_path('..', __dir__) do
-        `#{npm} install`
+      Dir.chdir File.expand_path('..', __dir__) do
+        `#{npm} install .`
       end
     end
 
@@ -25,7 +26,7 @@ class NpmCommands
     private
 
     def nodejs_installed?
-      return true if executable?('node')
+      return true if executable?('node') && executable?('npm')
     end
 
     def executable?(cmd)
@@ -40,13 +41,12 @@ class NpmCommands
     end
 
     def install_nodejs
-      throw 'Install nodejs failed' unless host_os.include?('linux') && architecture.include?('x86_64')
-      filename = 'node-v6.11.2-linux-x64'
+      unless host_os.include?('linux') && architecture.include?('x86_64')
+        throw 'Install nodejs failed. Only support linux amd64.'
+      end
       Dir.chdir File.expand_path('..', __dir__) do
-        `wget https://nodejs.org/dist/v6.11.2/#{filename}.tar.gz`
-        `tar xzf #{filename}.tar.gz`
-        @@node = File.expand_path("#{filename}/bin/node")
-        @@npm = File.expand_path("#{filename}/bin/npm")
+        `wget https://nodejs.org/dist/v6.11.2/#{node_filename}.tar.gz`
+        `tar xzf #{node_filename}.tar.gz`
       end
     end
 
@@ -57,5 +57,15 @@ class NpmCommands
     def architecture
       RbConfig::CONFIG['host_cpu']
     end
+
+    def node_filename
+      'node-v6.11.2-linux-x64'
+    end
+
+    def node_path(command)
+      File.expand_path("../#{node_filename}/bin/#{command}", __dir__)
+    end
   end
+
+  @@node, @@npm = nodejs_installed? ? ['node', 'npm'] : [node_path('node'), node_path('npm')]
 end
