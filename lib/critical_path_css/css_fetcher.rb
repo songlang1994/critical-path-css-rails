@@ -1,5 +1,6 @@
 require 'json'
 require 'open3'
+require 'npm_commands'
 
 module CriticalPathCss
   class CssFetcher
@@ -59,7 +60,7 @@ module CriticalPathCss
         }
       }.merge(@config.penthouse_options)
       out, err, st = Dir.chdir(GEM_ROOT) do
-        Open3.capture3('node', 'lib/fetch-css.js', JSON.dump(options))
+        Open3.capture3(NpmCommands.node, 'lib/fetch-css.js', JSON.dump(options))
       end
       if !st.exitstatus.zero? || out.empty? && !err.empty?
         STDOUT.puts out
