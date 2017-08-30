@@ -12,17 +12,31 @@ module CriticalPathCss
 
     def fetch
       routes, action_routes, result = @config.routes, @config.action_routes, {}
-      result.merge! routes.map { |route| [route, css_for_route(route)] }.to_h if routes
-      result.merge! action_routes.map { |action, route| [action, css_for_route(route)] }.to_h if action_routes
+      result.merge! routes.map { |route| [route, css_for_route_retry(route)] }.to_h if routes
+      result.merge! action_routes.map { |action, route| [action, css_for_route_retry(route)] }.to_h if action_routes
       result
     end
 
     def fetch_route(path_or_action)
       route = action_string?(path_or_action) ? @config.action_routes[path_or_action] : path_or_action
-      css_for_route route
+      css_for_route_retry route
     end
 
     protected
+
+    def css_for_route_retry(route)
+      retry_times = 0
+      begin
+        css_for_route(route)
+      rescue StandardError => e
+        if retry_times < @config.retry_times
+          retry_times += 1
+          STDOUT.puts "#{e.message} retry #{retry_times}/#{@config.retry_times}"
+          retry
+        end
+        raise
+      end
+    end
 
     def css_for_route(route)
       options = {
