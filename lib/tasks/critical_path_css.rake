@@ -4,6 +4,7 @@ require 'npm_commands'
 namespace :critical_path_css do
   desc 'Run npm install for critical path css rails'
   task npm_install: :environment do
+    NpmCommands.install
     NpmCommands.run_npm_install
   end
 
